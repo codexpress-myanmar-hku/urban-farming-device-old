@@ -20,3 +20,5 @@ All sensors excluding DHT11 available. DHT11 not working correctly. Will debug i
 Need hardware guys to improve the wiring.
 
 Will improve for better performance in the coming week.
+
+The water pump is proved working when voltage is sufficient(when all batteries filled in). Further testing is required.
