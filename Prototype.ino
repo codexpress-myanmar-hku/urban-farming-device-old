@@ -12,7 +12,7 @@ dht DHT11;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 //settings for all sensors
-int relay_pin=8;
+//int relay_pin=8;
 int soil_sign = A0; 
 int soil_val = 900; 
 int tem_val=26;
@@ -22,7 +22,7 @@ String PASS = "12345678"; // CHANGE ME
 String API = "ZE1X91RSHEB4YXD5";   // CHANGE ME
 String HOST = "api.thingspeak.com";
 String PORT = "80";
-String field = "field2";
+String field = "field1";
 int countTrueCommand;
 int countTimeCommand; 
 boolean found = false; 
@@ -40,7 +40,7 @@ void setup()
    sendCommand("AT+CWMODE=1",5,"OK");
    sendCommand("AT+CWJAP=\""+ AP +"\",\""+ PASS +"\"",20,"OK");
    //sensors setting
-   pinMode(relay_pin,OUTPUT);
+   //pinMode(relay_pin,OUTPUT);
    pinMode(soil_sign, INPUT); 
    lcd.begin(16,2); //设置LCD显示的数目。16 X 2：16格2行。
    lcd.print("Watering System"); 
@@ -50,17 +50,33 @@ void setup()
 void loop()
 {
   //sensors values
-  int chk = DHT11.read(DHT11PIN);
+  int chk = DHT11.read11(DHT11PIN);
   int tem=(int)DHT11.temperature;
   int hum=(int)DHT11.humidity;
   int sensorValue = analogRead(soil_sign);   
   sensors.requestTemperatures();
+  Serial.print("Soil temperature: ");
   Serial.println(sensors.getTempCByIndex(0));
+  Serial.print("Moisture: ");
+  Serial.println(sensorValue);
+  Serial.print("DHT Temperature: ");
+  Serial.println(tem);
+  Serial.print("DHT Humidity: ");
+  Serial.println(hum);
+  
   //lcd screen
   lcd.clear();
-  lcd.print("Watering System"); //
+  lcd.print("CodeXpress2018");
+  lcd.setCursor(0,1);
+  lcd.print("T:");
+  lcd.print(sensors.getTempCByIndex(0));
+  lcd.setCursor(8,1);
+  lcd.print("M:");
+  lcd.print(sensorValue);
+  /*lcd.setCursor(9,0);
+  lcd.print(sensors.getTempCByIndex(0));
   lcd.setCursor(0,1);  //将闪烁的光标设置到column 0, line 1 (注释：从0开始数起，line 0是显示第一行，line 1是第二行。)
-  lcd.print("S:"); //开机后屏幕现实以秒几时的时间
+  lcd.print("S:"); 
   lcd.setCursor(2,1);
   lcd.print(sensorValue); 
   lcd.setCursor(7,1);
@@ -70,7 +86,7 @@ void loop()
   lcd.setCursor(12,1);
   lcd.print("H:");
   lcd.setCursor(14,1);
-  lcd.print(hum);
+  lcd.print(hum);*/
   
 //sending data to thingspeak(be modified later). currently just send testing data to my own site. Plz set up thingspeak fast.
   //wificonnect();
@@ -81,15 +97,16 @@ void loop()
   sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
   sendCommand("AT+CIPSEND=0," +String(getData.length()+4),4,">");
   esp8266.println(getData);delay(1500);countTrueCommand++;
-  Serial.println(a);
+  //Serial.println(a);
   sendCommand("AT+CIPCLOSE",5,"OK");
   delay(100);
-  if((analogRead(soil_sign) >soil_val))
+  /*if((analogRead(soil_sign) >soil_val))
   {
     digitalWrite(relay_pin,HIGH);
   delay(3000);
       digitalWrite(relay_pin,LOW); //LOW to poweroff the LED light on jidianqi
-  }
+  }*/
+  delay(2000);
  }
 
  void wificonnect(){
