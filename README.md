@@ -15,10 +15,12 @@ Added comment and explanation for codes and their functions.
 
 Sending data to thingspeak through esp8266 available. Please set up the one for codexpress fast.
 
-All sensors excluding DHT11 available. DHT11 not working correctly. Will debug in a few days.
+All sensors available. DHT11 come alive.
+
+Available data: Soil mosture/temperature. Air humidity/temperature.
 
 Need hardware guys to improve the wiring.
 
 Will improve for better performance in the coming week.
 
-The water pump is proved working when voltage is sufficient(when all batteries filled in). Further testing is required.
+
