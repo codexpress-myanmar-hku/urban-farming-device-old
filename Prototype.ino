@@ -12,7 +12,7 @@ dht DHT11;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 //settings for all sensors
-int relay_pin=8;
+//int relay_pin=8;
 int soil_sign = A0; 
 int soil_val = 900; 
 int tem_val=26;
@@ -22,7 +22,7 @@ String PASS = "12345678"; // CHANGE ME
 String API = "ZE1X91RSHEB4YXD5";   // CHANGE ME
 String HOST = "api.thingspeak.com";
 String PORT = "80";
-String field = "field2";
+String field = "field1";
 int countTrueCommand;
 int countTimeCommand; 
 boolean found = false; 
@@ -40,7 +40,7 @@ void setup()
    sendCommand("AT+CWMODE=1",5,"OK");
    sendCommand("AT+CWJAP=\""+ AP +"\",\""+ PASS +"\"",20,"OK");
    //sensors setting
-   pinMode(relay_pin,OUTPUT);
+   //pinMode(relay_pin,OUTPUT);
    pinMode(soil_sign, INPUT); 
    lcd.begin(16,2); //设置LCD显示的数目。16 X 2：16格2行。
    lcd.print("Watering System"); 
@@ -50,19 +50,19 @@ void setup()
 void loop()
 {
   //sensors values
-  /*int chk = DHT11.read(DHT11PIN);
+  int chk = DHT11.read11(DHT11PIN);
   int tem=(int)DHT11.temperature;
-  int hum=(int)DHT11.humidity;*/
+  int hum=(int)DHT11.humidity;
   int sensorValue = analogRead(soil_sign);   
   sensors.requestTemperatures();
   Serial.print("Soil temperature: ");
   Serial.println(sensors.getTempCByIndex(0));
   Serial.print("Moisture: ");
   Serial.println(sensorValue);
-  /*Serial.print("DHT Temperature: ");
+  Serial.print("DHT Temperature: ");
   Serial.println(tem);
   Serial.print("DHT Humidity: ");
-  Serial.println(hum);*/
+  Serial.println(hum);
   
   //lcd screen
   lcd.clear();
@@ -100,12 +100,13 @@ void loop()
   //Serial.println(a);
   sendCommand("AT+CIPCLOSE",5,"OK");
   delay(100);
-  if((analogRead(soil_sign) >soil_val))
+  /*if((analogRead(soil_sign) >soil_val))
   {
     digitalWrite(relay_pin,HIGH);
   delay(3000);
       digitalWrite(relay_pin,LOW); //LOW to poweroff the LED light on jidianqi
-  }
+  }*/
+  delay(2000);
  }
 
  void wificonnect(){
