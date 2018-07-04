@@ -22,7 +22,7 @@ String PASS = "12345678"; // CHANGE ME
 String API = "ZE1X91RSHEB4YXD5";   // CHANGE ME
 String HOST = "api.thingspeak.com";
 String PORT = "80";
-String field = "field1";
+//String field = "field1";
 int countTrueCommand;
 int countTimeCommand; 
 boolean found = false; 
@@ -43,7 +43,6 @@ void setup()
    //pinMode(relay_pin,OUTPUT);
    pinMode(soil_sign, INPUT); 
    lcd.begin(16,2); //设置LCD显示的数目。16 X 2：16格2行。
-   lcd.print("Watering System"); 
    sensors.begin();//begin the soil temperature sensors
 }
 
@@ -73,31 +72,16 @@ void loop()
   lcd.setCursor(8,1);
   lcd.print("M:");
   lcd.print(sensorValue);
-  /*lcd.setCursor(9,0);
-  lcd.print(sensors.getTempCByIndex(0));
-  lcd.setCursor(0,1);  //将闪烁的光标设置到column 0, line 1 (注释：从0开始数起，line 0是显示第一行，line 1是第二行。)
-  lcd.print("S:"); 
-  lcd.setCursor(2,1);
-  lcd.print(sensorValue); 
-  lcd.setCursor(7,1);
-  lcd.print("T:");
-  lcd.setCursor(9,1);
-  lcd.print(tem); 
-  lcd.setCursor(12,1);
-  lcd.print("H:");
-  lcd.setCursor(14,1);
-  lcd.print(hum);*/
+
   
 //sending data to thingspeak(be modified later). currently just send testing data to my own site. Plz set up thingspeak fast.
-  //wificonnect();
-  valSensor =a ;
-  a+=10;
-  String getData = "GET /update?api_key="+ API +"&"+ field +"="+String(valSensor);
-  sendCommand("AT+CIPMUX=1",5,"OK");
-  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
-  sendCommand("AT+CIPSEND=0," +String(getData.length()+4),4,">");
-  esp8266.println(getData);delay(1500);countTrueCommand++;
-  //Serial.println(a);
+  
+
+  senddata(tem,"field1");
+  senddata(hum,"field2");
+  senddata(sensorValue,"field3");
+  senddata(sensors.getTempCByIndex(0),"field4");
+  sendCommand("AT+CIPSTATUS",8,"STATUS");
   sendCommand("AT+CIPCLOSE",5,"OK");
   delay(100);
   /*if((analogRead(soil_sign) >soil_val))
@@ -109,33 +93,38 @@ void loop()
   delay(2000);
  }
 
- void wificonnect(){
-  valSensor =a ;
-  a+=10;
+
+
+void senddata(int data, String field){
+  Serial.println(data);
+  valSensor =data ;
   String getData = "GET /update?api_key="+ API +"&"+ field +"="+String(valSensor);
   sendCommand("AT+CIPMUX=1",5,"OK");
-  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
-  sendCommand("AT+CIPSEND=0," +String(getData.length()+4),4,">");
-  esp8266.println(getData);delay(1500);countTrueCommand++;
-  Serial.println(a);
-  sendCommand("AT+CIPCLOSE",5,"OK");
-  delay(100);
-}
+  bool sent=0;
+  while(!sent){
 
-void sendCommand(String command, int maxTime, char readReplay[]) {
+    sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+    sent=sendCommand("AT+CIPSEND=0," +String(getData.length()+4),4,">");
+    esp8266.println(getData);
+  }
+  delay(1500);countTrueCommand++;
+}
+int sendCommand(String command, int maxTime, char readReplay[]) {
   Serial.print(countTrueCommand);
   Serial.print(". at command => ");
   Serial.print(command);
   Serial.print(" ");
+  found = false;
   while(countTimeCommand < (maxTime*1))
   {
     esp8266.println(command);//at+cipsend
     if(esp8266.find(readReplay))//ok
     {
       found = true;
+      
       break;
     }
-  
+
     countTimeCommand++;
   }
   
@@ -144,6 +133,7 @@ void sendCommand(String command, int maxTime, char readReplay[]) {
     Serial.println("OYI");
     countTrueCommand++;
     countTimeCommand = 0;
+    return 1;
   }
   
   if(found == false)
@@ -151,8 +141,9 @@ void sendCommand(String command, int maxTime, char readReplay[]) {
     Serial.println("Fail");
     countTrueCommand = 0;
     countTimeCommand = 0;
+    return 0;
   }
   
-  found = false;
+  
  }
 
