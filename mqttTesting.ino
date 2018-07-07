@@ -5,10 +5,15 @@
 #include <SoftwareSerial.h>
 #define RX 10
 #define TX 11
-IPAddress server(10, 0, 0, 2);
-char ssid[] = "Heidi";           // your network SSID (name)
-char pass[] = "Zhh123456";           // your network password
+char mqttUserName[] = "CodeXpress";  // Can be any name.
+char mqttPass[] = " VWA0R335S3O3USS1";  // Change this your MQTT API Key from Account > MyProfile.
+char writeAPIKey[] = "ZE1X91RSHEB4YXD5";    // Change to your channel Write API Key.
+long channelID = 523307;
+char ssid[] = "NETGEAR26";           // your network SSID (name)
+char pass[] = "12345678";           // your network password
 int status = WL_IDLE_STATUS;   // the Wifi radio's status
+const char* server = "mqtt.thingspeak.com"; 
+int clientID[8];
 
 // Initialize the Ethernet client object
 WiFiEspClient espClient;
@@ -62,12 +67,13 @@ void loop() {
   // put your main code here, to run repeatedly:
   if (!client.connected()) {
     reconnect();
+  }else{
+    Serial.println("Success");
   }
   client.loop();
 }
 
 void reconnect() {
-  // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect, just a name to identify the client
@@ -85,4 +91,23 @@ void reconnect() {
       delay(5000);
     }
   }
-}
+   /* while (!client.connected()) 
+  {
+    Serial.print("Attempting MQTT connection...");
+    
+    if (client.connect(12345678,mqttUserName,mqttPass)) 
+    {
+      Serial.println("connected");
+    } else 
+    {
+      Serial.print("failed, rc=");
+      // Print to know why the connection failed.
+      // See http://pubsubclient.knolleary.net/api.html#state for the failure code explanation.
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    } 
+    */
+
+  }
+
