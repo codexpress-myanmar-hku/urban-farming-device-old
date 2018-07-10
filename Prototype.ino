@@ -3,19 +3,14 @@
 #include <DallasTemperature.h>
 #include <dht.h>//library for dht11(air temperature and humidity)
 #include <SoftwareSerial.h>//library for esp8266
-#include <LiquidCrystal.h>//library for lcd screen
 #define ONE_WIRE_BUS 12
 #define RX 10
 #define TX 11
 #define DHT11PIN 9
+#define soil_sign A0
 dht DHT11;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
-//settings for all sensors
-//int relay_pin=8;
-int soil_sign = A0; 
-int soil_val = 900; 
-int tem_val=26;
 //settings for wifi connection to thingspeak
 String AP = "NETGEAR26";       // CHANGE ME
 String PASS = "12345678"; // CHANGE ME
@@ -29,7 +24,6 @@ boolean found = false;
 int valSensor = 1;
 int a=0;
 SoftwareSerial esp8266(RX,TX); 
-LiquidCrystal lcd(7,6,5,4,3,2); 
  
 void setup()
 {
@@ -42,7 +36,6 @@ void setup()
    //sensors setting
    //pinMode(relay_pin,OUTPUT);
    pinMode(soil_sign, INPUT); 
-   lcd.begin(16,2); //设置LCD显示的数目。16 X 2：16格2行。
    sensors.begin();//begin the soil temperature sensors
 }
 
@@ -62,21 +55,10 @@ void loop()
   Serial.println(tem);
   Serial.print("DHT Humidity: ");
   Serial.println(hum);
-  
-  //lcd screen
-  lcd.clear();
-  lcd.print("CodeXpress2018");
-  lcd.setCursor(0,1);
-  lcd.print("T:");
-  lcd.print(sensors.getTempCByIndex(0));
-  lcd.setCursor(8,1);
-  lcd.print("M:");
-  lcd.print(sensorValue);
+
 
   
-//sending data to thingspeak(be modified later). currently just send testing data to my own site. Plz set up thingspeak fast.
-  
-
+//sending data to thingspeak.
   senddata(tem,"field1");
   senddata(hum,"field2");
   senddata(sensorValue,"field3");
@@ -96,13 +78,13 @@ void loop()
 
 
 void senddata(int data, String field){
+  Serial.print("sending data:");
   Serial.println(data);
   valSensor =data ;
   String getData = "GET /update?api_key="+ API +"&"+ field +"="+String(valSensor);
   sendCommand("AT+CIPMUX=1",5,"OK");
   bool sent=0;
-  while(!sent){
-
+  while(!sent){       //retry when fail
     sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
     sent=sendCommand("AT+CIPSEND=0," +String(getData.length()+4),4,">");
     esp8266.println(getData);
@@ -120,30 +102,24 @@ int sendCommand(String command, int maxTime, char readReplay[]) {
     esp8266.println(command);//at+cipsend
     if(esp8266.find(readReplay))//ok
     {
-      found = true;
-      
+      found = true;      
       break;
     }
-
     countTimeCommand++;
   }
-  
   if(found == true)
   {
     Serial.println("OYI");
     countTrueCommand++;
     countTimeCommand = 0;
     return 1;
-  }
-  
+  } 
   if(found == false)
   {
     Serial.println("Fail");
     countTrueCommand = 0;
     countTimeCommand = 0;
     return 0;
-  }
-  
-  
+  }  
  }
 
