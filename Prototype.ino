@@ -8,6 +8,8 @@
 #define TX 11
 #define DHT11PIN 9
 #define soil_sign A0
+#define VT_PIN A1 
+#define AT_PIN A2
 dht DHT11;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
@@ -42,10 +44,16 @@ void setup()
 void loop()
 {
   //sensors values
+  int sensorValue = analogRead(soil_sign); 
+  int vt_read = analogRead(VT_PIN);
+  int at_read = analogRead(AT_PIN);
   int chk = DHT11.read11(DHT11PIN);
   int tem=(int)DHT11.temperature;
   int hum=(int)DHT11.humidity;
-  int sensorValue = analogRead(soil_sign);   
+  float voltage = vt_read * (5.0 / 1024.0) * 5.0;
+  float current = at_read * (5.0 / 1024.0);
+  float watts = voltage * current;
+    
   sensors.requestTemperatures();
   Serial.print("Soil temperature: ");
   Serial.println(sensors.getTempCByIndex(0));
@@ -55,6 +63,13 @@ void loop()
   Serial.println(tem);
   Serial.print("DHT Humidity: ");
   Serial.println(hum);
+  Serial.print("Volts: "); 
+  Serial.print(voltage, 3);
+  Serial.print("\tAmps: ");
+  Serial.print(current,3);
+  Serial.print("\tWatts: ");
+  Serial.println(watts,3);
+  Serial.println();
 
 
   
@@ -65,13 +80,6 @@ void loop()
   senddata(sensors.getTempCByIndex(0),"field4");
   sendCommand("AT+CIPSTATUS",8,"STATUS");
   sendCommand("AT+CIPCLOSE",5,"OK");
-  delay(100);
-  /*if((analogRead(soil_sign) >soil_val))
-  {
-    digitalWrite(relay_pin,HIGH);
-  delay(3000);
-      digitalWrite(relay_pin,LOW); //LOW to poweroff the LED light on jidianqi
-  }*/
   delay(2000);
  }
 
