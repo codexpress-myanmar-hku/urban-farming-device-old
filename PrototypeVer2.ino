@@ -1,4 +1,3 @@
-
 //setup Wifi and mqtt
 #include <WiFiEsp.h>
 #include <WiFiEspClient.h>
@@ -118,8 +117,9 @@ void loop()
   Serial.print("\tWatts: ");
   Serial.println(watts,3);
   Serial.println();
-
-  String str=String(tem)+", "+String(hum)+", "+String(sensorValue)+", "+String(sensors.getTempCByIndex(0));
+  //Combine data into one string in the format that (AirTemp AirHum SoilMoi SoilTemp Volt Current Watts)
+  String str=String(tem)+", "+String(hum)+", "+String(sensorValue)+", "+String(sensors.getTempCByIndex(0))
+            +String(voltage)+String(current)+String(watts);
   Serial.println(str);
   char msg[50];
   
@@ -142,8 +142,8 @@ void loop()
   sendCommand("AT+CIPCLOSE",5,"OK");
 
   
-  
-    client.loop();
+  checkwifi();
+  client.loop();
  }
 
 
@@ -245,3 +245,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   Serial.println();
 }
+
+void checkwifi(){
+  status = WL_IDLE_STATUS;
+  while ( status != WL_CONNECTED) {
+     Serial.print("Attempting to connect to WPA SSID: ");
+     Serial.println(ssid);
+     // Connect to WPA/WPA2 network
+ 
+     status = WiFi.begin(ssid, pass);
+    }
+}
+
