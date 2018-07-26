@@ -92,8 +92,8 @@ void loop()
   int vt_read = analogRead(VT_PIN);
   int at_read = analogRead(AT_PIN);
   int chk = DHT11.read11(DHT11PIN);
-  int tem=(int)DHT11.temperature;
-  int hum=(int)DHT11.humidity;
+  float tem=DHT11.temperature;
+  float hum=DHT11.humidity;
   float voltage = vt_read * (5.0 / 1024.0) * 5.0;
   float current = at_read * (5.0 / 1024.0);
   float watts = voltage * current;
@@ -151,8 +151,7 @@ void loop()
 void senddata(float data, String field){
   Serial.print("sending data:");
   Serial.println(data);
-  valSensor =data ;
-  String getData = "GET /update?api_key="+ API +"&"+ field +"="+String(valSensor);
+  String getData = "GET /update?api_key="+ API +"&"+ field +"="+String(data);
   sendCommand("AT+CIPMUX=1",5,"OK");
   bool sent=0;
   int retried=0;
