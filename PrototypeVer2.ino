@@ -30,10 +30,9 @@ int a =0;
 char ssid[] = "NETGEAR26"; // your network SSID (name)
 char pass[] = "12345678"; // your network password
 int status = WL_IDLE_STATUS; // the Wifi radio's status
-String API = "FP2IDWVXL5QLDD4U";   // CHANGE ME
+String API = "FP2IDWVXL5QLDD4U";   // CHANGE ME FOR THINGSPEAK
 String HOST = "api.thingspeak.com";
 String PORT = "80";
-//String field = "field1";
 int countTrueCommand;
 int countTimeCommand; 
 boolean found = false; 
@@ -46,12 +45,7 @@ void setup()
 {
    Serial.begin(9600); 
    Serial1.begin(9600);
-   //AT command
-   /*sendCommand("AT",5,"OK");
-   sendCommand("AT+CWMODE=1",5,"OK");
-   sendCommand("AT+CWJAP=\""+ AP +"\",\""+ PASS +"\"",20,"OK");*/
-
-   //espwifi
+   //espwifi setup
    WiFi.init(&Serial1);
    // check for the presence of the shield
    if (WiFi.status() == WL_NO_SHIELD) {
@@ -84,13 +78,16 @@ void setup()
 }
 
 void loop()
-{
-  //reconnect when disconnect
+{ 
+  //reconnect wifi if disconnect
+  checkwifi();
+  //reconnect mqtt if disconnect
   if (!client.connected()) {
     reconnect();
   }
-  
-  //sensors values
+  Serial.print("Wifi status: ");
+  Serial.println(WiFi.status());
+  //Getting all sensors values
   int sensorValue = analogRead(soil_sign); 
   int vt_read = analogRead(VT_PIN);
   int at_read = analogRead(AT_PIN);
@@ -100,7 +97,8 @@ void loop()
   float voltage = vt_read * (5.0 / 1024.0) * 5.0;
   float current = at_read * (5.0 / 1024.0);
   float watts = voltage * current;
-    
+
+  //Printing data for debug on serial monitor  
   sensors.requestTemperatures();
   Serial.print("Soil temperature: ");
   Serial.println(sensors.getTempCByIndex(0));
@@ -117,12 +115,13 @@ void loop()
   Serial.print("\tWatts: ");
   Serial.println(watts,3);
   Serial.println();
+
+  
   //Combine data into one string in the format that (AirTemp AirHum SoilMoi SoilTemp Volt Current Watts)
-  String str=String(tem)+", "+String(hum)+", "+String(sensorValue)+", "+String(sensors.getTempCByIndex(0))
-            +String(voltage)+String(current)+String(watts);
+  String str=String(tem)+","+String(hum)+","+String(sensorValue)+","+String(sensors.getTempCByIndex(0))
+            +","+String(voltage)+","+String(current)+","+String(watts);
   Serial.println(str);
   char msg[50];
-  
   str.toCharArray(msg,50);
   //timing
   currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
@@ -138,17 +137,18 @@ void loop()
   senddata(hum,"field2");
   senddata(sensorValue,"field3");
   senddata(sensors.getTempCByIndex(0),"field4");
+  senddata(current,"field5");
+  senddata(voltage,"field6");
   sendCommand("AT+CIPSTATUS",8,"STATUS");
   sendCommand("AT+CIPCLOSE",5,"OK");
 
-  
-  checkwifi();
+
   client.loop();
  }
 
 
 
-void senddata(int data, String field){
+void senddata(float data, String field){
   Serial.print("sending data:");
   Serial.println(data);
   valSensor =data ;
@@ -162,7 +162,7 @@ void senddata(int data, String field){
     Serial1.println(getData);
     retried++;
   }
-  delay(1500);countTrueCommand++;
+  countTrueCommand++;
 }
 
 
@@ -210,6 +210,7 @@ int sendCommand(String command, int maxTime, char readReplay[]) {
 
 }
 
+
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
@@ -222,12 +223,15 @@ void reconnect() {
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+      Serial.println(" try again");
+      if(client.state()==-3){
+        checkwifi();
+      }
+      delay(3000);
     }
   }
 }
+
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
@@ -246,9 +250,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println();
 }
 
+
+
 void checkwifi(){
-  status = WL_IDLE_STATUS;
-  while ( status != WL_CONNECTED) {
+  while ( !WiFi.status()) {
      Serial.print("Attempting to connect to WPA SSID: ");
      Serial.println(ssid);
      // Connect to WPA/WPA2 network
